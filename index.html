@@ -44,38 +44,38 @@
       <div class="slides">
         <section>
           <h1>MapReduce</h1>
-          <h3>Framework for distributed computing</h3>
+          <h3>Simplified Data Processing on Large Clusters (2004)</h3>
           <p>
-          <small>Paper authors: Jeffrey Dean and Sanjay Ghemawat</a></small>
+          <small>Authors: Jeffrey Dean and Sanjay Ghemawat</small><br />
+          <small>Google</small>
+          </p>
           <br />
-          <small>Presentation by Martin Bjeldbak Madsen</a></small></p>
-          <p><small>spMI e15, Aalborg University</a></small></p>
-        </section>
-
-        <section>
-          <h2>Motivation</h2>
-          <p>How do we <em>effectively</em> run an inherently simple, parallelizable computation on large datasets?</p>
-          <!--
-          <p>We want to <em>effectively</em> process large datasets</p>
-          <p>Crawled documents, logs, invoices, etc...</p>
-          <p>Want a model that parallelizes computations whilst abstracting details</p>
-          -->
-
-          <aside class="notes">
-            Large datasets: thousands of terabytes
-
-            Allows users to focus on their computation.
-
-            Have hundreds or thousands of commodity computers
-
-            Want to abstract details such as handling of data distribution, machine faults, computation distribution, and load balancing?
-
-          </aside>
+          <p>
+          <small>Presentation by Martin Bjeldbak Madsen</small></p>
+          <small>spMI e15, Aalborg University</small></p>
         </section>
 
         <section data-markdown>
           <script type="text/template">
-            ## Enter... Google's MapReduce
+            ## Motivation
+            How do we <em>effectively</em> run an inherently simple, parallelizable computation on large datasets?
+
+            <aside class="notes">
+              Large datasets: thousands of terabytes
+
+              Allows users to focus on their computation.
+
+              Have hundreds or thousands of commodity computers
+
+              Want to abstract details such as handling of data distribution, machine faults, computation distribution, and load balancing?
+            </aside>
+          </script>
+
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+            ## Google's MapReduce
 
             1. What is it?
             2. Why use it?
@@ -84,27 +84,141 @@
             5. Is it useful?
             6. Conclusions
           </script>
-          <a href="#" class="navigate-down">
-            <img width="178" height="238" data-src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Down arrow">
-          </a>
         </section>
 
         <section>
-          <section data-markdown>
-            <script type="text/template">
+          <section data-markdown><script type="text/template">
               ## What is it?
-            </script>
-          </section>
+          </script></section>
+
+          <section data-markdown><script type="text/template">
+            <blockquote cite="MapReduce Google paper">
+              A programming model for processing and generating large data sets. Users specify a map function [..] and a reduce function. Many real world tasks are expressible in this model.
+            </blockquote>
+            <aside class="notes">
+              Functional programming model and supporting framework
+              Allows you to easily utilize hundreds or thousands of PCs by defining map and reduce
+            </aside>
+          </script></section>
+          <section data-markdown><script type="text/template">
+## MapReduce Model
+
+            Two simple functions with type signatures
+
+            ```haskell
+              map     :: (k, v)     -> [(k2, v2)]
+              reduce  :: (k2, [v2]) -> [v3]
+            ```
+
+            ... and possibly a shuffle/sort
+
+            ```haskell
+              shuffle :: (k2, R)    -> partition for k2
+            ```
+
+            <aside class="notes">
+              Map program reads "records" from input file, filtering and transformations, outputs a set of intermediate pairs
+
+              Reduce aggregates and summarizes for particular key
+
+              Shuffle/sort function, hash function (hash(key) mod R, where R is user defined, usually 4k), though any deterministic function will suffice. When bucket fills, written to disk. The map program terminates with M output files, one for each bucket.
+
+              SQL: map like group-by, reduce like aggregate
+            </aside>
+          </script></section>
 
           <section>
-            <blockquote cite="MapReduce paper">
-              A programming model for processing and generating large data sets. Users specify a map function [..] and a reduct function. Many real world tasts are expressible in this model.
-            </blockquote>
+            <h2>Word Counting Example</h2>
+            <pre><code class="python">
+              map(k: str, v: str):
+                # k: document name
+                # v: document contents
+                for word in v:
+                  EmitIntermediate(word, "1");
+
+              reduce(k: str, vs: Iterable):
+                # k: a word
+                # vs: list of counts
+                result = 0
+                for v in vs:
+                  result += v
+                Emit(str(result))
+            </code></pre>
+
+            <aside class="notes">
+              Map just emits word and count of occurences, 1 in simple example
+
+              Reduce sums together counts emitted for each word
+
+              Full code in appendix.
+
+              Also names of input/output files and tuning parameters. Then invoke MapReduce function.
+            </aside>
           </section>
+
+          <section data-markdown><script type="text/template">
+            ## Applications
+            - Text mining: distributed pattern matching (grep)
+            - Distributed sort
+            - Web link-graph traversal
+            - Document clustering
+            - Web access log stats
+            - ...
+
+            <aside class="notes">
+             Test note
+            </aside>
+          </script></section>
         </section>
 
+        <section data-markdown><script type="text/template">
+            ## Why use it?
+
+            - Many tasks can be rewritten to MapReduce format
+            - Library hides and automates many complexities
+              - Parralellization, load balancing, I/O, machine faults
+
+            <aside class="notes">
+              - Tasks such as shuffling data from one representation to another, or extracting data
+              - Automatic parralellization, load balancing, network and disk transfers, handling of machine faults, robustness
+            </aside>
+        </script></section>
+
+        <section data-markdown><script type="text/template">
+          Sources
+
+          - [Original paper (Jeff Dean, Sanjay Ghemawat, Google)](http://research.google.com/archive/mapreduce-osdi04.pdf)
+          - [Original presentation (Jeff Dean, Sanjay Ghemawat, Google)](http://research.google.com/archive/mapreduce-osdi04-slides/)
+          - [Introduction to MapReduce (Iilan Horn, Google)](http://www.slideshare.net/rantav/introduction-to-map-reduce)
+          - [MapReduce example image (Trifork)](http://blog.trifork.com//wp-content/uploads/2009/08/MapReduceWordCountOverview1.png)
+        </script></section>
+
+        <section data-markdown><script type="text/template">
+            Demo
+            <aside class="notes">
+             Test note
+            </aside>
+        </script></section>
       </div>
     </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <script src="lib/js/head.min.js"></script>
     <script src="js/reveal.js"></script>
