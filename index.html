@@ -5,8 +5,9 @@
     <meta charset="utf-8">
 
     <title>MapReduce</title>
+    <link href="/img/favicon.ico" rel="shortcut icon">
 
-    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="description" content="Simplified Data Processing on Large Clusters">
     <meta name="author" content="Hakim El Hattab">
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -60,7 +61,7 @@
             ## Motivation
             How do we <em>effectively</em> run an inherently simple, parallelizable computation on large datasets?
 
-            <aside class="notes">
+            Note:
               Large datasets: thousands of terabytes
 
               Allows users to focus on their computation.
@@ -68,7 +69,6 @@
               Have hundreds or thousands of commodity computers
 
               Want to abstract details such as handling of data distribution, machine faults, computation distribution, and load balancing?
-            </aside>
           </script>
 
         </section>
@@ -95,13 +95,13 @@
             <blockquote cite="MapReduce Google paper">
               A programming model for processing and generating large data sets. Users specify a map function [..] and a reduce function. Many real world tasks are expressible in this model.
             </blockquote>
-            <aside class="notes">
-              Functional programming model and supporting framework
-              Allows you to easily utilize hundreds or thousands of PCs by defining map and reduce
-            </aside>
+
+            Note:
+            - Functional programming model and supporting framework
+            - Allows you to easily utilize hundreds or thousands of PCs by defining map and reduce
           </script></section>
           <section data-markdown><script type="text/template">
-## MapReduce Model
+            ## MapReduce Model
 
             Two simple functions with type signatures
 
@@ -116,15 +116,11 @@
               shuffle :: (k2, R)    -> partition for k2
             ```
 
-            <aside class="notes">
-              Map program reads "records" from input file, filtering and transformations, outputs a set of intermediate pairs
-
-              Reduce aggregates and summarizes for particular key
-
-              Shuffle/sort function, hash function (hash(key) mod R, where R is user defined, usually 4k), though any deterministic function will suffice. When bucket fills, written to disk. The map program terminates with M output files, one for each bucket.
-
-              SQL: map like group-by, reduce like aggregate
-            </aside>
+            Note:
+            - Map program reads "records" from input file, filtering and transformations, outputs a set of intermediate pairs
+            - Reduce aggregates and summarizes for particular key
+            - Shuffle/sort function, hash function (hash(key) mod R, where R is user defined, usually 4k), though any deterministic function will suffice. When bucket fills, written to disk. The map program terminates with M output files, one for each bucket.
+            - SQL: map like group-by, reduce like aggregate
           </script></section>
 
           <section>
@@ -165,9 +161,6 @@
             - Web access log stats
             - ...
 
-            <aside class="notes">
-             Test note
-            </aside>
           </script></section>
         </section>
 
@@ -178,11 +171,168 @@
             - Library hides and automates many complexities
               - Parralellization, load balancing, I/O, machine faults
 
-            <aside class="notes">
-              - Tasks such as shuffling data from one representation to another, or extracting data
-              - Automatic parralellization, load balancing, network and disk transfers, handling of machine faults, robustness
-            </aside>
+            Note:
+            - Tasks such as shuffling data from one representation to another, or extracting data
+            - Automatic parralellization, load balancing, network and disk transfers, handling of machine faults, robustness
+            - Google uses it internally for thousands of jobs, has spawned many OSS alternatives
         </script></section>
+
+        <section>
+          <section data-markdown><script type="text/template">
+            ## How does it work?
+            <aside class="notes">
+               Let's look internally at how the model is implemented by Google and what happens when the MapReduce routine is called on word counting example
+            </aside>
+          </script></section>
+
+        <section data-markdown><script type="text/template">
+            ## Execution overview
+            <img src="img/execution-overview.png" width="90%" />
+
+            Note:
+            1. Split input file, starts many copies of program
+            2. Special copy: master. Picks idle workers and assigns map/reduce task.
+              - Tries to pick workers that have the data on disk (GFS also stores redundantly): locality
+            3. Map worker parses k/v pairs from input, passes to user Map function, Map output buffered in memory
+            4. Buffered pairs written to local disk, partitioned into R regions by our shuffle function
+            5. Reduce worker notified about intermediate file location, reads data
+            6. Passes k/vs to user Reduce function, output of Reduce appended to final output file for reduce partition
+        </script></section>
+
+        <section data-markdown><script type="text/template">
+            ## Word Count Revisited
+            <img src="img/MapReduceWordCountOverview1.png" />
+
+            Note:
+            - As many buckets as reduce task, hashing has thus been used for shuffle function
+        </script></section>
+
+        <section data-markdown><script type="text/template">
+            ## Pipelining
+            <img src="img/pipelining.gif" />
+
+            Note:
+            - Want many more map tasks than workers, with 2k machines, often 200k map, 5k reduce tasks
+            - Minimizes time for fault recovery
+            - Can pipeline shuffling with map execution, usually they're sequential
+        </script></section>
+
+        <section data-markdown><script type="text/template">
+          ## Fault tolerance
+
+          - Worker failure
+            - Power/disk failure, corrupt data, etc
+          - Slow workers
+            - Other jobs on system, bad disks, etc
+
+          Note:
+          - Dead workers. Workers send periodic heartbeats to master. 3 cases:
+            - Map failure: reexecute completed and in-progress tasks
+            - Reduce failure: Reexecute in-progress tasks
+            - Master: Google's implementation aborts and leaves it up to user code to handle
+            - Google lost 1.6k of 1.8k machines once, and still finished computation
+          - Slow workers
+            - Redundant execution, because as we shall see, slow workers significantly lengthen completion time
+            - Solution: near end of phase, assign backup copies of map/reduce tasks to idle workers
+        </script></section>
+        </section>
+
+        <section>
+          <section data-markdown><script type="text/template">
+            ## Is it effective?
+          </script></section>
+
+          <section data-markdown><script type="text/template">
+            ## Grep
+            <img src="img/grep.png" />
+
+            Data transfer rate over time on entire MapReduce job
+
+            Note:
+            - Scans through 1 TB data for rare (92k in (10^10) 10 billion records) 3-character pattern
+            - Locality helpful, as peak data 31 GB/s with ~1800 workers assigned, without 10 GB/s limited by rack switches
+            - Entire computation takes about 80s
+            - Startup delay due to program propagation to workers, interacting with GFS to open 1k input files
+          </script></section>
+
+        <section data-markdown><script type="text/template">
+          ## Sorting
+          <img src="img/sort-full.png"/>
+
+          Note:
+          - Sorts 10 billion 100-byte records, 10 TB data
+          - Map: extract 10-byte sorting key from text line and emits the key and original text line as intermediat k, v
+          - Reduce: identity
+          - a: 839s (13 min)
+            - Top: Input rate less than grep, as half time and bidwidth writing intermediat output. Grep much smaller
+            - Mid: Shuffle starts right after first map. Hump from first 1700 reduce tasks, only 1700 machines, thus it goes down
+            - Bot: Delay between end of first shuffle and start of writing due to processing intermediate data
+            - Input rate > shuffle+output due to locality optimization, most data is read from disk
+            - Shuffle rate > output because output writes twice (GFS)
+          - b: 1235s (20 min)
+            - Similar to a, but without backup tasks. Except with long tail
+            - At end, all but 5 tasks completed
+            - 44% longer
+          - c: 886s (14 min)
+            - Intentionally kill 200/1746 worker processes minutes into the computation
+            - Immediately restart new worker processes on machines
+            - Only 5% longer
+            - Negative input since previously completed map disappears and needs to be redone. Re-execution happens quickly.
+        </script></section>
+
+        </section>
+
+        <section>
+
+        <section data-markdown><script type="text/template">
+            ## Is it useful?
+        </script></section>
+
+        <section data-markdown><script type="text/template">
+            - Many implementations
+            - Context of tool
+            Note:
+            - Implementation
+              - MapReduce used to be Google's term, and the implementation discussed in paper is proprietary and not accessible, GFS proprietary too
+              - Apache has the Hadoop ecosystem, with OSS HDFS and OSS implementation of MapReduce
+            - Tooling
+              - Often used as ETL tool, no analysis
+              - Apache Hadoop ecosystem has many analysis tools
+              - Apache Mahout is collection of machine learning algorithm implementations built on top of Hadoop ecosystem
+        </script></section>
+
+        <section data-markdown><script type="text/template">
+            ## Pros/cons
+            - Pros
+              - Simple to use
+              - No dependencies on data model or schema
+              - Scalable
+            - Cons
+              - No realtime computations
+              - Not every problem supported
+            - Tradeoff between fault-tolerence and effeciency
+
+            Note:
+            - Cons
+              - It's batch oriented in nature
+              - Not every algorithm can boil down to MapReduce, such as algorithms that require global state
+            - Frequent I/Os required for fault tolerence, reduces effeciency a lot
+            - Effeciency, map/reduce are blocking, thus can't use pipelining between map/reduce operations
+        </script></section>
+
+        </section>
+
+        <section data-markdown><script type="text/template">
+            ## Conclusions
+            - High level, easy to understand abstraction
+            - Simple large-scale computations
+            - Low effeciency
+            - Lots of critisim from DBMS community
+            Note:
+            - High level, get to focus on problem and library deals with details
+            - But it's not a DBMS
+        </script></section>
+
 
         <section data-markdown><script type="text/template">
           Sources
@@ -193,12 +343,12 @@
           - [MapReduce example image (Trifork)](http://blog.trifork.com//wp-content/uploads/2009/08/MapReduceWordCountOverview1.png)
         </script></section>
 
+        <!--
         <section data-markdown><script type="text/template">
-            Demo
-            <aside class="notes">
-             Test note
-            </aside>
+            ## Demo
+            Note:
         </script></section>
+        -->
       </div>
     </div>
 
