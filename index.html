@@ -8,7 +8,7 @@
     <link href="img/favicon.ico" rel="shortcut icon">
 
     <meta name="description" content="Simplified Data Processing on Large Clusters">
-    <meta name="author" content="Hakim El Hattab">
+    <meta name="author" content="Martin Bjeldbak Madsen">
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -55,6 +55,12 @@
           <p>
           <small>Presentation by Martin Bjeldbak Madsen</small></p>
           <small>spMI e15, Aalborg University</small></p>
+
+          <aside class="notes">
+          Forever ago
+          From 2004, article that started MapReduce paradigm
+          </aside>
+
         </section>
 
         <section data-markdown>
@@ -63,12 +69,10 @@
             How do we <em>effectively</em> run an inherently simple, parallelizable computation on large datasets?
 
             Note:
+              - Why did authors make MapReduce
               - Large datasets: thousands of terabytes
-              - Allows users to focus on their computation.
-              - Have hundreds or thousands of commodity computers
               - Want to abstract details such as handling of data distribution, machine faults, computation distribution, and load balancing?
           </script>
-
         </section>
 
         <section data-markdown>
@@ -98,10 +102,11 @@
 
           <section data-markdown><script type="text/template">
             <blockquote cite="Google's MapReduce paper">
-              A programming model for processing and generating large data sets. Users specify a Map function [..] and a Reduce function. Many real world tasks are expressible in this model.
+              A programming model for processing and generating large data sets. Users specify a map function [..] and a reduce function. Many real world tasks are expressible in this model.
             </blockquote>
 
             Note:
+            - Allows users to focus on their computation.
             - Functional programming model and supporting framework
             - Allows you to easily utilize hundreds or thousands of PCs by defining map and reduce
           </script></section>
