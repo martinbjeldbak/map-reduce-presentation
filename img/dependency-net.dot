@@ -1,0 +1,6 @@
+strict digraph dependencynet {
+  layout=circo
+  Age -> Gender [dir="both"]
+  Gender -> Income [dir="both"]
+  Age -> Income [dir="both"]
+}

@@ -4,38 +4,34 @@
   <head>
     <meta charset="utf-8">
 
-    <title>MapReduce</title>
-    <link href="img/favicon.ico" rel="shortcut icon">
+    <title>Conditional Dependency Networks</title>
 
-    <meta name="description" content="Simplified Data Processing on Large Clusters">
+    <meta name="description" content="spMI Exam, January 2016">
     <meta name="author" content="Martin Bjeldbak Madsen">
 
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
 
     <link rel="stylesheet" href="css/reveal.css">
     <link rel="stylesheet" href="css/theme/black.css" id="theme">
-    <!-- ><link rel="stylesheet" href="css/theme/solarized.css"
-      id="theme"> -->
 
-      <!-- Code syntax highlighting -->
-      <link rel="stylesheet" href="lib/css/zenburn.css">
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
 
-      <!-- Printing and PDF exports -->
-      <script>
-        var link = document.createElement( 'link' );
-        link.rel = 'stylesheet';
-        link.type = 'text/css';
-        link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
-        document.getElementsByTagName( 'head' )[0].appendChild( link );
-      </script>
+    <!-- Printing and PDF exports -->
+    <script>
+var link = document.createElement( 'link' );
+link.rel = 'stylesheet';
+link.type = 'text/css';
+link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
 
-      <!--[if lt IE 9]>
-        <script src="lib/js/html5shiv.js"></script>
+    <!--[if lt IE 9]>
+      <script src="lib/js/html5shiv.js"></script>
       <![endif]-->
-
   </head>
 
   <body>
@@ -45,358 +41,453 @@
       <!-- Any section element inside of this container is displayed as a slide -->
       <div class="slides">
         <section>
-          <h1>MapReduce</h1>
-          <h3>Simplified Data Processing on Large Clusters (2004)</h3>
+          <h3>Multi-Label Classification Using Conditional Dependency Networks (2011)</h3>
+          <h4>Paper by Yuhong Guo and Suichen Gu</h4>
           <p>
-          <small>Authors: Jeffrey Dean and Sanjay Ghemawat</small><br />
-          <small>Google</small>
-          </p>
+          <small>Presentation by Martin Bjeldbak Madsen</small>
           <br />
-          <p>
-          <small>Presentation by Martin Bjeldbak Madsen</small></p>
-          <small>spMI e15, Aalborg University</small></p>
-
-          <aside class="notes">
-          Forever ago
-          From 2004, article that started MapReduce paradigm
-          </aside>
-
+          <small>January 15th, 2016</small>
+          <br />
+          <small>spMI exam, Aalborg University</small>
+          </p>
         </section>
 
         <section data-markdown>
           <script type="text/template">
-            ## Motivation
-            How do we <em>effectively</em> run an inherently simple, parallelizable computation on large datasets?
+          ## Motivation
+          How do we take advantage of dependencies between labels in multi-label classification techniques?
 
-            Note:
-              - Why did authors make MapReduce
-              - Large datasets: thousands of terabytes
-              - Want to abstract details such as handling of data distribution, machine faults, computation distribution, and load balancing?
+          Note:
+          - Example: Movie may be comedy, action, probably not horror
+          - So what is multi-label classification? Let's see...
+          </script>
+        </section>
+
+        <section data-background="img/yosemite-full.jpg" data-markdown>
+          <script type="text/template">
+          ## Multi-label classification
+          This image could belong to classes <br /> <em>{foliage, forest, mountain}</em>
           </script>
         </section>
 
         <section data-markdown>
           <script type="text/template">
-            ## Google's MapReduce
+          ## Multi-label classification
+          <img data-src="img/multi-label.png" />
+          - Superset of multi-class classification
+          - Captures more than multi-class methods 
+            - One vs. rest and one vs. one
+          - Existing methods...
+            - Have complicated learning and prediction phases
+            - Require <em>many</em> classifiers (Bayesian), NP-hard (Bayesian, Markov random fields)
+          - Is there a better way to model label independencies?
 
-            1. What is it?
-            2. Why use it?
-            3. How does it work?
-            4. Is it effective?
-            5. Is it useful?
-            6. Conclusions
-
-            Note:
-            - What can it be used for, examples
-            - What are the benefits
-            - Performance graphs
-            - Who uses it
-            - Sum up implications of model
+          Note:
+          - What is multi-label classification? Compared to multi-class.
+          - Example: Movie may be comedy, action, probably not horror
+            - OAA, OAO will train competing classifiers
+          - Existing classifiers: Multi-dim. Bayesian classifiers (de Waal) requires many classifiers, and it is NP-hard to identify optimal Bayesian network structure (Chickering). Conditional Markov random fields require inference for parameter learning, which is NP-hard (Heckerman)
           </script>
         </section>
 
+        <section data-markdown>
+          <script type="text/template">
+          ## Conditional Dependency Networks
+
+          Authors propose multi-label classification model, based on a cyclic directed graphical model known as dependency networks.
+
+
+          Note:
+          - Their approach consists of training such a conditional dep net, then using Gibbs sampling to infer labels
+          - Only need to train $k$ classifiers, where $k$ is the number of labels
+          - Requires some preliminaries...
+          </script>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+            ## Overview
+            - Preliminaries
+            - Conditional Dependency Networks
+            - Results
+            - Conclusion & Thoughts
+          </script>
+        </section>
+
+        <!-- PRELIMINARIES -->
         <section>
-          <section data-markdown><script type="text/template">
-              ## What is it?
-          </script></section>
-
-          <section data-markdown><script type="text/template">
-            <blockquote cite="Google's MapReduce paper">
-              A programming model for processing and generating large data sets. Users specify a map function [..] and a reduce function. Many real world tasks are expressible in this model.
-            </blockquote>
-
-            Note:
-            - Allows users to focus on their computation.
-            - Functional programming model and supporting framework
-            - Allows you to easily utilize hundreds or thousands of PCs by defining map and reduce
-          </script></section>
-
-          <section data-markdown><script type="text/template">
-            ## MapReduce Model
-
-            Two simple functions with type signatures
-
-            ```haskell
-              map     :: (k, v)     -> [(k2, v2)]
-              reduce  :: (k2, [v2]) -> [v3]
-            ```
-
-            ... and possibly a shuffle/sort
-
-            ```haskell
-              shuffle :: (k2, r) -> partition for k2
-            ```
-
-            Note:
-            - Map program reads "records" from input file, filtering and transformations, outputs a set of intermediate pairs
-            - Reduce aggregates and summarizes for particular key
-            - Shuffle/sort function, hash function (hash(key) mod R, where R is user defined, usually 4k), though any deterministic function will suffice (ex. extract hostname from url key). When bucket fills, written to disk. The map program terminates with M output files, one for each bucket.
-            - SQL: map like group-by, reduce like aggregate
-          </script></section>
-
-          <section>
-            <h2>Word Counting Example</h2>
-            <pre><code class="python">
-              map(k: str, v: str):
-                # k: document name
-                # v: document contents
-                for word in v:
-                  EmitIntermediate(word, "1");
-
-              reduce(k: str, vs: Iterable):
-                # k: a word
-                # vs: list of counts
-                result = 0
-                for v in vs:
-                  result += v
-                Emit(result)
-            </code></pre>
-
-            <aside class="notes" data-markdown><script type="text/template">
-              - Map just emits word and count of occurences, 1 in simple example
-              - Reduce sums together counts emitted for each word
-              - Full code in appendix.
-              - In pre this: include names of input/output files and tuning parameters. Then invoke MapReduce function.
-            </script></aside>
+          <section data-markdown>
+            <script type="text/template">
+              ## Preliminaries
+              1. Dependency networks
+              2. Binary classification (training)
+              3. Gibbs sampling (prediction)
+            </script>
           </section>
 
-          <section data-markdown><script type="text/template">
-            ## Applications
-            - Text mining: distributed pattern matching (grep)
-            - Distributed sort
-            - Web link-graph traversal
-            - Document clustering
-            - Web access log stats
-            - ...
-
-          </script></section>
-        </section>
-
-        <section data-markdown><script type="text/template">
-            ## Why use it?
-
-            - Many tasks can be rewritten to MapReduce format
-            - Library hides and automates many complexities
-              - Parralellization, load balancing, I/O, machine faults
-
-            Note:
-            - Tasks such as shuffling data from one representation to another, or extracting data
-            - Automatic parralellization, load balancing (workers perform fmany diff. tasks), network and disk transfers, handling of machine faults, robustness
-            - Google uses it internally for thousands of jobs, has spawned many OSS alternatives
-        </script></section>
-
-        <section>
-          <section data-markdown><script type="text/template">
-            ## How does it work?
-
-            Note:
-            - Let's look internally at how the model is implemented by Google and what happens when the MapReduce routine is called on word counting example
-            - Many implementations possible, this is Google's for large clusters of commidity pcs
-          </script></section>
-
-        <section data-markdown><script type="text/template">
-            ## Execution overview
-            <img src="img/execution-overview.png" width="90%" />
-
-            Note:
-            1. Split input file, starts many copies of program
-            2. Special copy: master. Picks idle workers and assigns map/reduce task. Locality
-            3. Map worker parses k/v pairs from input, passes to user Map function, Map output buffered in memory
-            4. Buffered pairs written to local disk, partitioned into R regions by our shuffle function
-            5. Reduce worker notified about intermediate file location, reads data
-            6. Passes k/vs to user Reduce function, output of Reduce appended to final output file for reduce partition
-        </script></section>
-
-        <section data-markdown><script type="text/template">
-            ## Word Count Revisited
-            <img src="img/MapReduceWordCountOverview1.png" />
-
-            Note:
-            - As many buckets as reduce task, hashing has thus been used for shuffle function
-        </script></section>
-
-        <section data-markdown><script type="text/template">
-            ## Pipelining
-            <img src="img/pipelining.gif" />
-
-            Note:
-            - Want many more map tasks than workers, with 2k machines, often 200k map, 5k reduce tasks, thus 5k files
-            - Minimizes time for fault recovery
-            - Pipeline shuffling with map execution
-        </script></section>
-
-        <section data-markdown><script type="text/template">
-          ## Fault tolerance
-
-          - Worker failure
-            - Power/disk failure, corrupt data, etc
-          - Slow workers
-            - Other jobs on system, bad disks, etc
+        <section data-markdown>
+          <script type="text/template">
+          ### 1. Dependency Network
+          <img data-src="img/bayesian-net.png" />
+          <img data-src="img/dependency-net.png" height="155px" />
+          - Cyclic, directed graphical model over random variables `$X = \left\{X_1, X_2, \dots, X_n \right\}$` and joint distribution `$\operatorname{p}\left(x\right)$`
+          - Each node (random variable) conditioned on its parents
+            - $p(\text{Age} \mid pa_{Age}) = p(\text{Age} \mid \text{Gender}, \text{Income})$
+          - CPT for variables estimated independently
+            - Using logistic regression, neural nets, etc...
+          - Used for probabilistic inference using Gibbs sampling
 
           Note:
-          - Dead workers. Workers send periodic heartbeats to master. 3 cases:
-            - Map failure: reexecute completed and in-progress tasks
-            - Reduce failure: Reexecute in-progress tasks
-            - Master: Google's implementation aborts and leaves it up to user code to handle
-            - Google lost 1.6k of 1.8k machines once
-          - Slow workers
-            - Redundant execution, because as we shall see, slow workers significantly lengthen completion time
-            - Solution: near end of phase, assign backup copies of map/reduce tasks to idle workers
-        </script></section>
+          - Not useful for modeling causation, unlike Bayesian
+          - Computationally effecient to learn joint distribution of dep. net. 
+          - Good for collaborative filtering (predicting preferences), as example shows. Also good for probabilistic queries.
+          - In Microsoft paper, they estimate each variables distribution independently. Construct dependency network from (in)dependencies in these estimates.
+          </script>
         </section>
 
-        <section>
-          <section data-markdown><script type="text/template">
-            ## Is it effective?
-          </script></section>
-
-          <section data-markdown><script type="text/template">
-            ## Grep
-            <img src="img/grep.png" />
-
-            Data transfer rate over time on entire MapReduce job
-
-            Note:
-            - Map emits line if it matches pattern
-            - Reduce is identity function that copies intermediate to output
-            - Scans through 1 TB data for rare (92k in (10^10) 10 billion records) 3-character pattern
-            - Locality helpful, as peak data 31 GB/s with ~1800 workers assigned, without 10 GB/s limited by rack switches
-            - Entire computation takes about 80s
-            - Startup delay due to program propagation to workers, interacting with GFS to open 1k input files
-          </script></section>
-
-        <section data-markdown><script type="text/template">
-          ## Sorting
-          <img src="img/sort-full.png"/>
+        <section data-markdown>
+          <script type="text/template">
+          ### 2. Binary Classification
+          <img data-src="img/sigmoid.png" height="300px" />
+          <img data-src="img/svm2.png" height="300px" />
+          - Logistic regression
+          <br />
+          - Support Vector Machines
+          <br />
+          <br/>
+          <small>Image sources: [wikibooks.org](https://en.wikibooks.org/wiki/Artificial_Neural_Networks/Activation_Functions), [opencv.org](http://docs.opencv.org/2.4/doc/tutorials/ml/introduction_to_svm/introduction_to_svm.html)</small>
 
           Note:
-          - Sorts 10 billion 100-byte records, 10 TB data
-          - Map: extract 10-byte sorting key from text line and emits the key and original text line as intermediat k, v
-          - Reduce: identity 
-          - a: 839s (13 min)
-            - Top: Input rate less than grep, as half time and bidwidth writing intermediat output. Grep much smaller
-            - Mid: Shuffle starts right after first map. Hump from first 1700 reduce tasks, only 1700 machines, thus it goes down
-            - Bot: Delay between end of first shuffle and start of writing due to processing intermediate data
-            - Input rate > shuffle+output due to locality optimization, most data is read from disk
-            - Shuffle rate > output because output writes twice (GFS)
-          - b: 1235s (20 min)
-            - Similar to a, but without backup tasks. Except with long tail
-            - At end, all but 5 tasks completed
-            - 44% longer
-          - c: 886s (14 min)
-            - Intentionally kill 200/1746 worker processes minutes into the computation
-            - Immediately restart new worker processes on machines
-            - Only 5% longer
-            - Negative input since previously completed map disappears and needs to be redone. Re-execution happens quickly.
-        </script></section>
+          - Widely used models, both of which are implemented in this paper, as I show later
+          - Logistic regression: I'll show how they implement this
+          - These are two methods, there are others, such as neural nets, etc
+          </script>
+        </section>
 
-        <section data-markdown><script type="text/template">
-            ## Performance thoughts
-            - Locality important
-            - Refinements important
-            - Pipelining important
+        <section data-markdown>
+          <script type="text/template">
+          ### 3. Gibbs sampling
+          - Iterative, random algorithm
+          - Approximates joint distribution over time.
+          - Used for approximate inference in Bayesian networks. Samples from joint distribution.
 
-            Note:
-            - Refinements such as backup tasks, GFS 2-way
-            - Keep workers as busy as possible
-        </script></section>
+          Sampling procedure
+          1. Initialize variables randomly. Suppose `$x = \langle x_1, x_2, \dots, x_K \rangle$`, with `$K$` variables and observed data `$\mathcal{D}$`
+          2. Sample from conditional distribution of `$x_i$` given `$x_{\neg i}$`
+            `$$
+              x_i \sim \operatorname{p}\left(x_i \mid x_{\neg i}, \mathcal{D}\right) \text{ for } i = 1, \dots, k
+              $$`
+          3. Go back to step 2 until convergence.
+
+          <!--
+          As more samples are gathered, the joint distribution `$\operatorname{p}\left(x_1, x_2, \dots, x_K\right)$` is approached.
+          -->
+
+          Note:
+          - Approximates by generating random samples from unknown joint distributions.
+          - Works nicely, since dependency nets approximate joint distributions
+          - Generates Markov chain, as only one variable is updated at a time
+          </script>
+        </section>
 
         </section>
 
+        <!-- CONDITIONAL DEP NETWORKS -->
         <section>
+          <section data-markdown>
+            <script type="text/template">
+              ## Conditional Dependency Networks
+              1. Conditional Dependency Networks
+              2. Training Conditional Dependency Networks
+              3. Prediction with Conditional Dependency Networks
+            </script>
+          </section>
 
-        <section data-markdown><script type="text/template">
-            ## Is it useful?
-        </script></section>
+          <section data-markdown>
+            <script type="text/template">
+              ### 1. Conditional Dependency Networks
+              <img data-src="img/conditional-dependency-network.png" width="70%">
+              - Expanded version of dependency network
+              - Fully connected between labels `$Y_1, Y_2, \dots, Y_K$`, conditioned on observed features `$X = \left\{X_1, X_2, \dots, X_n\right\}$`
+              - `$Y_i$` binary variables, `$X_i$` continuous/discrete
 
-        <section data-markdown><script type="text/template">
-            - Many implementations
-            - Context of tool
+              Note:
+              - Label variables are interdependent on each other, conditioning on observation features X
+              - Show example, four class variables
+            </script>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+              ### 2. Training Conditional Dependency Networks
+              - CPTs approximated using `$k$` probabilistic prediction models to learn `$\operatorname{p}\left(y_i = \pm 1 \mid x, y_{\neg i}, \theta_i\right)$`
+                - SVM implementation possible
+                - Logistic regression with `$L_2$` regularization
+                `$$
+              \max_{\theta_i} \sum_{l = 1}^t \log \operatorname{p}\left(y_i^l \mid x^l, y^l_{\neg i}, \theta_i\right) - \frac{\lambda}{2} \left(\theta_i^T \theta_i\right)
+              $$` where the data set `$\mathcal{D}$` is defined by
+              `$$
+              \mathcal{D} = \left\{ x^l, y_1^l, \dots, y_k^l \right\}_{l = 1}^t
+              $$`
+
+              Note:
+              - SAY FIRST: Better to approximate, due to a fully connected network CPTs having size 2^k (each variable has all other variables as its parents). This causes overfitting.
+              - Thus better to approximate
+              - $k$ is the number of labels (see prev slide)
+              - `$\lambda$` trade-off parameter
+              - Trained using convex optimization techniques
+            </script>
+          </section>
+
+        <section data-markdown>
+          <script type="text/template">
+            ### 3. Prediction with Conditional Dependency Networks
+            - Interested in finding most probably explanation (MPE)
+            `$$
+            y^* = \arg\max_y \operatorname{p}\left(y \mid x\right)
+            $$`
+            - Gibbs sampling used for approximate inference
+
             Note:
-            - Implementation
-              - MapReduce used to be Google's term, and the implementation discussed in paper is proprietary and not accessible, GFS proprietary too
-              - Apache has the Hadoop ecosystem, with OSS HDFS and OSS implementation of MapReduce
-            - Tooling
-              - Often used as ETL tool, no analysis
-              - Apache Hadoop ecosystem has many analysis tools
-              - Apache Mahout is collection of machine learning algorithm implementations built on top of Hadoop ecosystem
-        </script></section>
+            - MPE shown to be NP-hard, even for acyclic dir. graph. (Bayesian networks)
+          </script>
+        </section>
 
-        <section data-markdown><script type="text/template">
-            ## Pros/cons
-            - Pros
-              - Simple to use
-              - No dependencies on data model or schema
-              - Scalable
-            - Cons
-              - No realtime computations
-              - Not every problem supported
-            - Tradeoff between fault-tolerence and effeciency
+        <section data-markdown>
+          <script type="text/template">
+            ### Gibbs Sampling Inference
+            <img data-src="img/conditional-dependency-network.png" width="50%">
+            1. Visit `$Y_1, Y_2, \dots, Y_k$` in random order
+            2. Resample each variable until convergence (burn-in)
+            3. Collect samples to recover approximate joint distribution `$\operatorname{p}\left(y_1, \dots, y_k \mid X \right)$` by finding samples with high values of
+              `$$
+                 \prod_i \operatorname{p}\left(y_i \mid x, y_{\neg i}, \theta_i \right)
+               $$`
 
             Note:
-            - Cons
-              - It's batch oriented in nature
-              - Not every algorithm can boil down to MapReduce, such as algorithms that require global state
-            - Frequent I/Os required for fault tolerence, reduces effeciency a lot
-            - Effeciency, map/reduce are blocking, thus can't use pipelining between map/reduce operations
-        </script></section>
+            - As explained earlier...
+            - Burn in usually 100 iterations
+            - Sample collection 500 instances
+          </script>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+          ### Example
+          
+          Note:
+          - TODO: Example here if time
+          </script>
+        </section>
 
         </section>
 
-        <section data-markdown><script type="text/template">
-            ## Conclusions
-            - Restricted model
-            - High level, easy to understand abstraction
-            - Large-scale computations
-            - Low effeciency
-            - Multicore processors?
-            - Lots of critisim from DBMS community
-            - Context important
+        <!-- RESULTS -->
+        <section>
+          <section data-markdown>
+            <script type="text/template">
+              ## Results
+              1. Measurement methods
+              2. Competing models
+              3. Results
+            </script>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ### 1. Measurement methods
+            1. Exact match Ratio
+            2. Macro-F1
+            3. Micro-F1
 
             Note:
-            - Restricting programming model allows for...
-            - High level, automatic parallelization and distribution of computations, get to focus on problem and library deals with details
-            - Low effeciency: lots of time spent on making it fault tolerant
-            - Google implementation runs one worker pr machine, why not multiple?
-            - but it's not a DBMS...
-        </script></section>
+            
+            </script>
+          </section>
+
+          <section data-markdown style="text-align: left;">
+            <script type="text/template">
+            ### 1. Measurement methods: Exact Match
+
+            Defined by
+            `$$
+            \operatorname{EX} = \frac{1}{n} \sum_{i = 1}^n \operatorname{I}\left[ L_i^{\text{pred}} = L_i^{\text{true}}\right],
+            $$`
+            where `$\operatorname{I}\left[S\right] = 1$` if statement `$S$` is true, `$0$` otherwise.
+            
+            Note:
+            - Counts only exact matches between predicted label and true label
+            
+            </script>
+          </section>
+
+          <section data-markdown style="text-align: left;">
+            <script type="text/template">
+            ### 1. Measurement methods: Macro-F1
+            - Harmonic mean of average recall and precision over multiple sets.
+
+            - Computed by
+              `$$
+              \operatorname{Macro-avg}_\text{precision} = \frac
+              {\sum_i^k \operatorname{Precision}_i}
+              {k}
+              $$`
+              and
+              `$$
+              \operatorname{Macro-avg}_\text{recall} = \frac
+              {\sum_i^k \operatorname{Recall}_i}
+              {k}
+              $$`
+            - Then compute harmonic mean
+            `$$
+            \operatorname{Macro-F}_1 = \frac
+            {\operatorname{Macro-avg}_\text{precision} \cdot \operatorname{Macro-avg}_\text{recall}}
+            {\operatorname{Macro-avg}_\text{precision} + \operatorname{Macro-Avg}_\text{recall}}
+            $$`
+
+            Note:
+            
+            </script>
+          </section>
+
+          <section data-markdown style="text-align: left;">
+            <script type="text/template">
+            ### 1. Measurement methods: Micro-F1
+            - Harmonic mean of the micro-average of precision and the micro-average of recall over multiple sets.
+
+            - Computed by
+              `$$
+            \operatorname{Micro-avg}_\text{precision} = \frac
+            {\sum \operatorname{TP}_i}
+            {\sum \operatorname{TP}_i + \operatorname{FP}_i}
+            $$`
+            and
+            `$$
+            \operatorname{Micro-avg}_\text{recall} = \frac
+            {\sum \operatorname{TP}_i}
+            {\sum \operatorname{TP}_i + \operatorname{FN}_i}
+            $$`
+            - Then compute harmonic mean
+            `$$
+            \operatorname{Micro-F}_1 = \frac
+            {\operatorname{Micro-avg}_\text{precision} \cdot \operatorname{Micro-avg}_\text{recall}}
+            {\operatorname{Micro-avg}_\text{precision} + \operatorname{Micro-Avg}_\text{recall}}
+            $$`
+
+            Note:
+            
+            </script>
+          </section>
+
+          <section data-markdown style="text-align: left;">
+            <script type="text/template">
+            ### 2. Competing models
+            - LR (baseline): One vs. rest classifier
+            - MLKNN: modified `$k$`-nearest neighbor
+            - CML: Collective multi-label classifcation (random fields)
+
+            and
+            - SVM (baseline)
+            - SVM-HF: Heterogenerous feature kernels
+            - RankSVM: Ranking based SVM
+            
+            Note:
+            - One vs. rest: single classifier per class, with each only recognizing class and negative all others. No label dependencies
+            - MLKNN: uses statistical information (MAP) from label sets of neighboring instances
+            - CML: random fields
+            - SVM-HF: Original SVM output scores added to documents in new columns (converted to binary)
+            
+            </script>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ### 3. Results (Exact Match)
+            <img data-src="img/em-yeast.png" width="40%" />
+            <img data-src="img/em-enron.png" width="40%" />
+
+            <img data-src="img/em-emotion.png" width="40%" />
+            <img data-src="img/em-medical.png" width="40%" />
+
+            Note:
+            - CDN-LR, CDN-SVM best on Yeast, Enron, Emotion, Medical
+            - CDN-SVM tied on Genbase (not shown)
+
+            </script>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ### 3. Results (Macro-`$F_1$`)
+            <img data-src="img/macro-yeast.png" width="40%" />
+            <img data-src="img/macro-enron.png" width="40%" />
+
+            <img data-src="img/macro-emotion.png" width="40%" />
+            <img data-src="img/macro-medical.png" width="40%" />
+
+            Note:
+            - CDN-LR best on all datasets except enron
+            - CDN-SVM best on all datasts except yeast, ties on genbase (not shown)
+
+            </script>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ### 3. Results (Micro-`$F_1$`)
+            <img data-src="img/micro-yeast.png" width="40%" />
+            <img data-src="img/micro-enron.png" width="40%" />
+
+            <img data-src="img/micro-emotion.png" width="40%" />
+            <img data-src="img/micro-medical.png" width="40%" />
+
+            Note:
+            - CDN-LR best on all datasets
+            - CDN-SVM best on all datasets except genbase (not shown)
+
+            </script>
+          </section>
+
+        </section>
 
 
-        <section data-markdown><script type="text/template">
-          ## Sources
+        <!-- CONCLUSION -->
+        <section>
+          <section data-markdown>
+            <script type="text/template">
+            ## Conclusion
+            - Extension to conditional dependency network allowing multi-label classification
+            - Very simple to train w/ binary classifiers, straightforward to predict w/ Gibbs sampling
+            - Amazing performance compared to well-document multi-label classification methods
+            </script>
+          </section>
 
-          - [Original paper (Jeff Dean, Sanjay Ghemawat, Google)](http://research.google.com/archive/mapreduce-osdi04.pdf)
-          - [Original presentation (Jeff Dean, Sanjay Ghemawat, Google)](http://research.google.com/archive/mapreduce-osdi04-slides/)
-          - [Introduction to MapReduce (Iilan Horn, Google)](http://www.slideshare.net/rantav/introduction-to-map-reduce)
-          - [MapReduce example image (Trifork)](http://blog.trifork.com//wp-content/uploads/2009/08/MapReduceWordCountOverview1.png)
-        </script></section>
+          <section data-markdown>
+            <script type="text/template">
+            ## Constructive critisism
+            - Algorithm was hard to read
+            - Other binary classification models, or combination thereof?
+            - Results with more samples
+            - Usage for hierarchical classification techniques
+            - Time to predict (convergence) not documented
+
+            Note:
+            - Hier class isn't multi-label, but has forced dependencies
+              - Local approach: Start at classifier distinguishing between root levels. THen Classifier for every internal node. Datapoints classified by passing it down the classifiers, choosing the one with max probability
+            </script>
+          </section>
+        </section>
 
         <!--
-        <section data-markdown><script type="text/template">
-            ## Demo
-            Note:
-        </script></section>
+        <section data-markdown>
+          <script type="text/template">
+          </script>
+        </section>
         -->
+
       </div>
+
     </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     <script src="lib/js/head.min.js"></script>
     <script src="js/reveal.js"></script>
@@ -410,7 +501,7 @@ Reveal.initialize({
   progress: true,
   history: true,
   center: true,
-  slideNumber: 'c / t',
+  slideNumber: 'c/t',
 
   transition: 'slide', // none/fade/slide/convex/concave/zoom
 
@@ -419,9 +510,10 @@ Reveal.initialize({
   { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
   { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
   { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-  { src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+  { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
   { src: 'plugin/zoom-js/zoom.js', async: true },
-  { src: 'plugin/notes/notes.js', async: true }
+  { src: 'plugin/notes/notes.js', async: true },
+  { src: 'plugin/math/math.js', async: true }
   ]
 });
 

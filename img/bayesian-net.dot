@@ -1,0 +1,4 @@
+strict digraph dependencynet {
+  Age -> Income
+  Gender -> Income
+}
